@@ -18,3 +18,8 @@
 *.pem
 *.retry
 *.log
+.terraform/
+*.tfstate*
+*.pem
+*.retry
+*.log
