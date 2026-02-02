@@ -1,0 +1,59 @@
+- name: Install Docker, Nginx and Jenkins (Docker)
+  hosts: web
+  become: yes
+
+  pre_tasks:
+    - name: Remove old Jenkins repo
+      file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
+
+    - name: Remove old Jenkins GPG key
+      file:
+        path: /usr/share/keyrings/jenkins-keyring.gpg
+        state: absent
+
+    - name: Fix apt cache
+      apt:
+        update_cache: yes
+
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Check Jenkins container
+      shell: docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -w jenkins
+      register: jenkins_check
+      ignore_errors: yes
+
+    - name: Run Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins:lts
+        state: started
+        restart_policy: always
+        ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - jenkins_home:/var/jenkins_home
+      when: jenkins_check.rc != 0

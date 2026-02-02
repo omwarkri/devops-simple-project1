@@ -1,0 +1,58 @@
+- name: Install Docker, Jenkins and Nginx
+  hosts: ec2
+  become: yes
+
+  tasks:
+    # ---------------- Docker ----------------
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # ---------------- Java ----------------
+    - name: Install Java (required for Jenkins)
+      apt:
+        name: openjdk-17-jdk
+        state: present
+
+    # ---------------- Jenkins Repo ----------------
+    - name: Create keyrings directory
+      file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Jenkins GPG key (2023)
+      get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.gpg
+        mode: '0644'
+
+    - name: Add Jenkins repository
+      copy:
+        dest: /etc/apt/sources.list.d/jenkins.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    # ---------------- Jenkins ----------------
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Start and enable Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
