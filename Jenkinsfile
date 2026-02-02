@@ -1,26 +1,23 @@
 pipeline {
-    agent any
-
+    agent {
+        docker { image 'docker:24-dind' } // Docker-in-Docker
+    }
     environment {
         IMAGE_NAME = "omwarkri123/devops-demo"
         IMAGE_TAG  = "latest"
     }
-
     stages {
-
         stage('Clone Repo') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/omwarkri/devops-simple-project1.git'
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t $IMAGE_NAME:$IMAGE_TAG ."
             }
         }
-
         stage('Push Image to DockerHub') {
             steps {
                 withCredentials([usernamePassword(
@@ -35,7 +32,6 @@ pipeline {
                 }
             }
         }
-
         stage('Deploy Container') {
             steps {
                 sh '''
