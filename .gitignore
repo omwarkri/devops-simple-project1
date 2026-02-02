@@ -13,3 +13,8 @@
 
 # Logs
 *.log
+.terraform/
+*.tfstate*
+*.pem
+*.retry
+*.log
